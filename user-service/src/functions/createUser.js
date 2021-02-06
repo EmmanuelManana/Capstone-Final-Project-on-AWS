@@ -18,7 +18,7 @@ module.exports.createUser = async (event, context) => {
 
   try {
     const dynamodb = new AWS.DynamoDB.DocumentClient();
-    const createUser = await dynamodb.put(newUser).promise();
+    await dynamodb.put(newUser).promise();
 
     return {
       statusCode: 201,

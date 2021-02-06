@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 # app and org for use with dashboard.serverless.com
-service: service-template
+service: user-service
 app: my-fullstack-app
 org: emanana
 
@@ -22,7 +22,7 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: ${opt:stage, 'dev'}
+  stage: 'dev'
   region: us-east-1
 
 # you can overwrite defaults here
@@ -54,6 +54,9 @@ iamRoleStatements:
 #            - "/*"
 
 # you can define service wide environment variables here
+environment:
+  DYNAMODB_USER_TABLE: ${self:custom.dynamodb.userTable}
+
 #  environment:
 #    variable1: value1
 
@@ -87,6 +90,31 @@ functions:
         path: /hello
         method: get
         cors: true
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-mocha
+custom:
+  dynamodb:
+    userTable: ${self:service}-userTable-${self:provider.stage}
+  serverless-mocha-plugin:
+    testTemplate: templates/test-template.ejs
+    functionTemplate: templates/function-template.ejs
+resources:
+  Resources:
+    userTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.dynamodb.userTable}
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -138,27 +166,3 @@ functions:
 #     NewOutput:
 #       Description: "Description for the output"
 #       Value: "Some output value"
-
-plugins:
-  - serverless-pseudo-parameters
-  - serverless-mocha
-custom:
-  dynamodb:
-    userTable: ${self:service}-userTable-${self:provider.stage}
-  serverless-mocha-plugin:
-    testTemplate: templates/test-template.ejs
-    functionTemplate: templates/function-template.ejs
-resources:
-  Resources:
-    userTable:
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:custom.dynamodb.userTable}
-        AttributeDefinitions:
-          - AttributeName: pk
-            AttributeType: S
-        KeySchema:
-          - AttributeName: pk
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST

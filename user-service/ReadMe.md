@@ -4,5 +4,5 @@
 - sls deploy -v or sls dpeloy
 - help, sls --help or sls -h
 
-<!-- create a fnction though mocha -->
+<!-- create a function though mocha -->
 serverless create function -f testFunction --handler src/functions/testFunction.testFunction --path src/tests/
