@@ -1,3 +1,5 @@
+org: emanana
+app: my-fullstack-app
 # Welcome to Serverless!
 #
 # This file is the main config file for your service.
@@ -10,27 +12,25 @@
 #    docs.serverless.com
 #
 # Happy Coding!
-# app and org for use with dashboard.serverless.com
+
 service: user-service
-app: my-fullstack-app
-org: emanana
+# app and org for use with dashboard.serverless.com
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+# frameworkVersion: "=X.X.X"
 
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: 'dev'
+  stage: ${opt:stage, 'dev'}
   region: us-east-1
-
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
 
 # you can add statements to the Lambda function's IAM Role here
-iamRoleStatements:
+  iamRoleStatements:
     - Effect: Allow
       Action:
         - "dynamodb:Query"
@@ -38,7 +38,6 @@ iamRoleStatements:
       Resource:
         - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.dynamodb.userTable}
         - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.dynamodb.userTable}/index/pk
-#  iamRoleStatements:
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:ListBucket"
@@ -54,10 +53,8 @@ iamRoleStatements:
 #            - "/*"
 
 # you can define service wide environment variables here
-environment:
-  DYNAMODB_USER_TABLE: ${self:custom.dynamodb.userTable}
-
-#  environment:
+  environment:
+    DYNAMODB_USER_TABLE: ${self:custom.dynamodb.userTable}
 #    variable1: value1
 
 # you can add packaging information here
@@ -74,53 +71,18 @@ functions:
     handler: src/functions/createUser.createUser
     events:
       - http:
-          path: /v1/user
           method: post
           cors: true
+          path: /v1/user
           request:
             schema:
               application/json: ${file(src/schema/create_user_request.json)}
-        
-  testFunction:
-    handler: src/functions/testFunction.testFunction
-  hello:
-    handler: handler.hello
-    events:
-    - http:
-        path: /hello
-        method: get
-        cors: true
-
-plugins:
-  - serverless-pseudo-parameters
-  - serverless-mocha
-custom:
-  dynamodb:
-    userTable: ${self:service}-userTable-${self:provider.stage}
-  serverless-mocha-plugin:
-    testTemplate: templates/test-template.ejs
-    functionTemplate: templates/function-template.ejs
-resources:
-  Resources:
-    userTable:
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:custom.dynamodb.userTable}
-        AttributeDefinitions:
-          - AttributeName: pk
-            AttributeType: S
-        KeySchema:
-          - AttributeName: pk
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
 #    events:
-#      - httpApi:
-#          path: /users/create
+#      - http:
+#          path: users/create
 #          method: get
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
@@ -166,3 +128,27 @@ resources:
 #     NewOutput:
 #       Description: "Description for the output"
 #       Value: "Some output value"
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-mocha
+custom:
+  dynamodb:
+    userTable: ${self:service}-userTable-${self:provider.stage}
+  serverless-mocha-plugin:
+    testTemplate: templates/test-template.ejs
+    functionTemplate: templates/function-template.ejs
+resources:
+  Resources:
+    userTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.dynamodb.userTable}
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
